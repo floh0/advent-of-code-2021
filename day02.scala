@@ -1,6 +1,6 @@
 import scala.io.Source
 
-object Day1 {
+object Day2 {
     val input: Seq[(String, Int)] = Source.fromFile("day02.input")
         .getLines
         .map(_.split(" "))
