@@ -12,23 +12,31 @@ object Day8 {
     def part1(): Int = 
         input.flatMap { case (_, a) => a }.foldLeft(0)((a, v) => if (uniqueSegments.contains(v.length)) a+1 else a)
 
-    def f1(i: Int)(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
+    def fixedSize(i: Int)(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
         g.find(_.size == i)
 
-    def f2(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
-        a(4).foldLeft(g)((l, v) => l.filter(_.contains(v))).find(_.size == 6)
+    def fixedSizeContains(i: Int, j: Int)(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
+        g.filter(_.size == i).filter(v => a(j).forall(v.contains)).headOption
 
-    def f3(i: Int)(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
-        g.filter(_.size == i).filter(v => a(1).forall(v.contains)).headOption
+    def contained(j: Int)(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
+        g.filter(_.forall(a(j).contains)).headOption
 
-    def f4(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
-        g.filter(_.forall(a(6).contains)).headOption
-
-    def f5(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
+    def last(a: Seq[Seq[Char]], g: Seq[String]): Option[String] =
         g.headOption
 
     def solveLine(g: Seq[String]): Seq[(Seq[Char], Int)] = { 
-        val (_, s) = Seq((8, f1(7)), (4, f1(4)), (7, f1(3)), (1, f1(2)), (9, f2), (0, f3(6)), (6, f1(6)), (3, f3(5)), (5, f4), (2, f5))
+        val (_, s) = Seq(
+            (8, fixedSize(7)), 
+            (4, fixedSize(4)), 
+            (7, fixedSize(3)), 
+            (1, fixedSize(2)), 
+            (9, fixedSizeContains(6, 4)), 
+            (0, fixedSizeContains(6, 1)), 
+            (6, fixedSize(6)), 
+            (3, fixedSizeContains(5, 1)), 
+            (5, contained(6)), 
+            (2, last)
+        )
             .foldLeft((g, (0 to 9).map(_ => ('a' to 'g'): Seq[Char]))) {
                 case ((l, a), (i, f)) => 
                     val n = a.zipWithIndex.map { case (e, j) => if (i == j) e.filter(f(a, l).getOrElse("").contains) else e }
