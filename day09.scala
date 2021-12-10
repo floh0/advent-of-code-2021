@@ -29,17 +29,13 @@ object Day9 {
         .map { case (i, j) => input(i)(j)+1 }
         .sum
 
-    extension(s: Seq[(Int, Int)])
-        def cleaned: Seq[(Int, Int)] = s
-            .filterNot { case (a, b) => a < 0 || b < 0 || a > w-1 || b > h-1 }
-            .filterNot { case (a, b) => input(a)(b) == 9 }
-            .distinct
-
     def around(i: Int, j: Int): LazyList[Seq[(Int, Int)]] =
-        Seq((i, j), (i-1, j), (i+1, j), (i, j-1), (i, j+1)).cleaned #:: 
+        Seq((i, j)) #:: 
             around(i, j).map(_
                 .flatMap { case (k, l) => Seq((k, l), (k-1, l), (k+1, l), (k, l-1), (k, l+1)) }
-                .cleaned
+                .filterNot { case (a, b) => a < 0 || b < 0 || a > w-1 || b > h-1 }
+                .filterNot { case (a, b) => input(a)(b) == 9 }
+                .distinct
             )
 
     def bassin(i: Int, j: Int): Int = around(i, j)
