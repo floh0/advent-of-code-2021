@@ -1,7 +1,7 @@
 import scala.io.Source
 
-object Day2 {
-    val input:Seq[String] = Source.fromFile("day10.input")
+object Day10 {
+    val input: Seq[String] = Source.fromFile("day10.input")
         .getLines
         .toSeq
 
@@ -27,7 +27,7 @@ object Day2 {
     val incomplete: Map[Char, Int] = Map('(' -> 1, '[' -> 2, '{' -> 3, '<' -> 4)
 
     def part2(): Long = {
-        val remaining =input
+        val remaining = input
             .map(validate)
             .flatMap {
                 case Right(v) if v.size > 0 => Some(v)
