@@ -8,7 +8,7 @@ object Day14 {
         }
 
     extension[C](m: Seq[(C, Long)])
-        def merge: Seq[(C, Long)] = m
+        def merged: Seq[(C, Long)] = m
             .groupBy { case (a, _) => a }
             .view.mapValues(_.map { case (_, n) => n }.sum).toSeq
 
@@ -20,12 +20,12 @@ object Day14 {
                 .get(s"$a$b")
                 .map(v => Seq((Seq(a, v), n), (Seq(v, b), n)))
                 .getOrElse(Seq((Seq(a, b), n)))
-        }.merge)
+        }.merged)
     
     def after(steps: Int): Long = {
         val r = states.take(steps+1).last
             .flatMap { case (Seq(a, b), n) => Seq((a, n), (b, n)) }
-            .merge
+            .merged
             .map { 
                 case (a, n) if a == input.head || a == input.last => (n+1)/2
                 case (_, n) => n/2 
