@@ -1,3 +1,4 @@
+import scala.collection.mutable.{HashSet, PriorityQueue}
 import scala.io.Source
 
 object Day15 {
@@ -9,43 +10,39 @@ object Day15 {
     val h = input.size
     val w = input(0).size
 
-    def astar(cave: Seq[Seq[Int]], width: Int, height: Int, heuristic: (Int, Int) => Int)
-             (i: Int, j: Int, weight: Int, candidates: Seq[(Int, Int, Int, Int)], visited: Seq[(Int, Int)]): Int = {
-        val newVisited = (i, j) +: visited
-        if (i == height-1 && j == width-1) weight
+    def dijkstra(cave: Seq[Seq[Int]], width: Int, height: Int, pq: PriorityQueue[(Int, (Int, Int))], visited: HashSet[(Int, Int)]): Int = {
+        val (d, (i, j)) = pq.dequeue()
+        if (i == height-1 && j == width-1) d
         else {
-            val newCandidates = Seq((i-1, j), (i+1, j), (i, j-1), (i, j+1))
-                .filterNot { case (a, b) => a < 0 || a >= height || b < 0 || b >= width || newVisited.contains((a, b)) }
-                .map { case (a, b) => (a, b, weight + cave(a)(b), heuristic(a, b)) }
-            (candidates ++ newCandidates)
-                .groupBy { case (a, b, _, _) => (a, b) }
-                .values
-                .flatMap(_.sortBy { case (_, _, c, d) => c+d }.headOption)
-                .toSeq
-                .sortBy { case (_, _, c, d) => c+d } match {
-                    case (a, b, c, _) +: t => astar(cave, width, height, heuristic)(a, b, c, t, newVisited)
+            Seq((i-1, j), (i+1, j), (i, j-1), (i, j+1))
+                .filterNot { case (a, b) => a < 0 || a >= height || b < 0 || b >= width || visited.contains((a, b)) }
+                .map { case (a, b) => (d + cave(a)(b), (a, b)) }
+                .foreach { case (c, (a, b)) => 
+                    pq.enqueue((c, (a, b)))
+                    visited.add((a, b))
                 }
+            dijkstra(cave, width, height, pq, visited)
         }
     }
 
-    def part1(): Int = {
-        val heuristic: (Int, Int) => Int = (x: Int, y: Int) => (h-1-x).abs+(w-1-y).abs
-        astar(input, h, w, heuristic)(0, 0, 0, Seq.empty, Seq.empty)
+    def findMin(cave: Seq[Seq[Int]]): Int = {
+        val ord = Ordering.by[(Int, (Int, Int)), Int] { case (d, _) => d }.reverse
+        val pq = PriorityQueue((0, (0, 0)))(ord)
+        val visited = HashSet((0, 0))
+        dijkstra(cave, cave.size, cave(0).size, pq, visited)
     }
 
+    def part1(): Int = findMin(input)
+
+    def computeValue(i: Int): Int = if (i > 9) computeValue(i-9) else i
+
     val newInput = (0 to 4).flatMap { a => (0 until h).map { i => 
-            (0 to 4).flatMap { b => (0 until w).map { j => 
-                val newValue = a+b+input(i)(j)
-                if (newValue > 9) newValue%9 else newValue
-            }}
+        (0 to 4).flatMap { b => (0 until w).map { j => computeValue(a+b+input(i)(j)) }}
     }}
     val newH = newInput.size
     val newW = newInput(0).size
 
-    def part2(): Int = {
-        val heuristic: (Int, Int) => Int = (x: Int, y: Int) => (newH-1-x).abs+(newW-1-y).abs
-        astar(newInput, newH, newW, heuristic)(0, 0, 0, Seq.empty, Seq.empty)
-    }
+    def part2(): Int = findMin(newInput)
 
     def main(args: Array[String]): Unit = {
         println(part1())
