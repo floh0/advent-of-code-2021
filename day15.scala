@@ -7,9 +7,6 @@ object Day15 {
         .map(_.map(_.toString.toInt))
         .toSeq
 
-    val h = input.size
-    val w = input(0).size
-
     def dijkstra(cave: Seq[Seq[Int]], width: Int, height: Int, pq: PriorityQueue[(Int, (Int, Int))], visited: HashSet[(Int, Int)]): Int = {
         val (d, (i, j)) = pq.dequeue()
         if (i == height-1 && j == width-1) d
@@ -36,11 +33,11 @@ object Day15 {
 
     def computeValue(i: Int): Int = if (i > 9) computeValue(i-9) else i
 
-    val newInput = (0 to 4).flatMap { a => (0 until h).map { i => 
-        (0 to 4).flatMap { b => (0 until w).map { j => computeValue(a+b+input(i)(j)) }}
+    val newInput = (0 to 4).flatMap { a => (0 until input.size).map { i => 
+        (0 to 4).flatMap { b => (0 until input(0).size).map { j => 
+            computeValue(a+b+input(i)(j)) 
+        }}
     }}
-    val newH = newInput.size
-    val newW = newInput(0).size
 
     def part2(): Int = findMin(newInput)
 
