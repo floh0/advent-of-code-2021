@@ -10,15 +10,15 @@ object Day18 {
     final case class Node(left: Tree, right: Tree) extends Tree
     final case class Leaf(value: Int) extends Tree
 
-    def reduceNodes(acc: List[Token], left: List[Token]): List[Token] = left match {
-        case BracketLeft :: (t1: Tree) :: Comma :: (t2: Tree) :: BracketRight :: tail => reduceNodes(Node(t1, t2) :: acc, tail)
-        case head :: tail => reduceNodes(head :: acc, tail)
+    def buildNodes(acc: List[Token], left: List[Token]): List[Token] = left match {
+        case BracketLeft :: (t1: Tree) :: Comma :: (t2: Tree) :: BracketRight :: tail => buildNodes(Node(t1, t2) :: acc, tail)
+        case head :: tail => buildNodes(head :: acc, tail)
         case _ => acc
     }
 
     def buildTree(state: List[Token]): Tree = state match {
         case (h: Tree) :: Nil => h
-        case e => buildTree(reduceNodes(List.empty, e).reverse)
+        case e => buildTree(buildNodes(List.empty, e).reverse)
     }
 
     def lineToTree(line: String): Tree =
@@ -29,15 +29,30 @@ object Day18 {
             case e => Leaf(e.toString.toInt)
         }.toList)
 
-    val input = Source.fromFile("day18.input")
+    val input: Seq[Tree] = Source.fromFile("day18.input")
         .getLines
         .map(lineToTree)
         .toSeq
 
-    extension(t: Tree) {
-        def height: Int = t match {
+    extension(tree: Tree) {
+        def height: Int = tree match {
             case Leaf(_) => 0
             case Node(left, right) => 1+left.height.max(right.height)
+        }
+
+        def addValueRight(value: Int): Tree = tree match {
+            case Leaf(a) => Leaf(a+value)
+            case Node(left, right) => Node(left, right.addValueRight(value))
+        }
+
+        def addValueLeft(value: Int): Tree = tree match {
+            case Leaf(a) => Leaf(a+value)
+            case Node(left, right) => Node(left.addValueLeft(value), right)
+        }
+
+        def magnitude: Int = tree match {
+            case Leaf(a) => a
+            case Node(left, right) => 3*left.magnitude + 2*right.magnitude
         }
     }
 
@@ -47,20 +62,10 @@ object Day18 {
         case Leaf(a) => (Leaf(a), None, None, exploded)
         case Node(left, right) => 
             val (newLeft, leftLeftExplosion, leftRightExplosion, leftExploded) = explodeOnce(left, height+1, exploded)
-            val rightModified = leftRightExplosion.map(addValueLeft(right, _)).getOrElse(right)
+            val rightModified = leftRightExplosion.map(right.addValueLeft).getOrElse(right)
             val (newRight, rightLeftExplosion, rightRightExplosion, rightExploded) = explodeOnce(rightModified, height+1, leftExploded)
-            val leftModified = rightLeftExplosion.map(addValueRight(newLeft, _)).getOrElse(newLeft)
+            val leftModified = rightLeftExplosion.map(newLeft.addValueRight).getOrElse(newLeft)
             (Node(leftModified, newRight), leftLeftExplosion, rightRightExplosion, rightExploded)
-    }
-
-    def addValueRight(tree: Tree, value: Int): Tree = tree match {
-        case Leaf(a) => Leaf(a+value)
-        case Node(left, right) => Node(left, addValueRight(right, value))
-    }
-
-    def addValueLeft(tree: Tree, value: Int): Tree = tree match {
-        case Leaf(a) => Leaf(a+value)
-        case Node(left, right) => Node(addValueLeft(left, value), right)
     }
 
     def reduceOnce(tree: Tree, reduced: Boolean): (Tree, Boolean) = tree match {
@@ -82,17 +87,12 @@ object Day18 {
             else reduced
         }
     
-    def magnitude(tree: Tree): Int = tree match {
-        case Leaf(a) => a
-        case Node(left, right) => 3*magnitude(left) + 2*magnitude(right)
-    }
-
-    def part1(): Int = magnitude(input.reduce((a, v) => doStuff(Node(a, v))))
+    def part1(): Int = input.reduce((a, v) => doStuff(Node(a, v))).magnitude
 
     def part2(): Int = Seq.tabulate(input.size, input.size)((x,y) => (x,y))
         .flatten
         .filter { case (x,y) => x != y }
-        .map { case (x, y) => magnitude(doStuff(Node(input(x), input(y)))) }
+        .map { case (x, y) => doStuff(Node(input(x), input(y))).magnitude }
         .max
 
     def main(args: Array[String]): Unit = {
