@@ -34,13 +34,8 @@ object Day18 {
         .map(lineToTree)
         .toSeq
 
-    extension(t1: Tree) {
-        def `==`(t2: Tree): Boolean = (t1, t2) match {
-            case (Leaf(a), Leaf(b)) => a == b
-            case (Node(left1, right1), Node(left2, right2)) => left1 == left2 && right1 == right2
-            case _ => false
-        }
-        def height: Int = t1 match {
+    extension(t: Tree) {
+        def height: Int = t match {
             case Leaf(_) => 0
             case Node(left, right) => 1+left.height.max(right.height)
         }
